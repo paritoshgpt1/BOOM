@@ -7,42 +7,71 @@ pipeline: # Pipeline section, defines pipeline's properties
     mongodb_host: 127.0.0.1 # MongoDB's host
 
 modules:
-    -   name: module_1 # Name of the module
-        type: Sample # Type of the module
-        input_file: data.json # Input file's uri
-        output_module: module_2 # The following module's name
-        instances: 1 # Number of instances of this module
-        params:
-            -   name: p1
-                type: collection # Type of the param, int, float or collection
-                values: # Possible vaules for collection param
-                    - val1
-                    - val2
-                    - val3
+    - name: module_1 # Name of the module
+      type: Sample # Type of the module
+      input_file: data.json # Input file's uri
+      output_module: module_2 # The following module's name
+      instances: 1 # Number of instances of this module
+      params:
+          - name: p1
+            type: collection # Type of the param, int, float or collection
+            values: # Possible values for collection param
+                - val1
+                - val2
+                - val3
 
-            -   name: p2
-                type: int
-                start: 0
-                end: 20
-                step_size: 20
+          - name: p2
+            type: int
+            start: 0
+            end: 20
+            step_size: 20
 
-    -   name: module_2
-        type: Sample
-        output_module: module_3
-        instances: 1
-        params:
-            -   name: p
-                type: float
-                start: 0.0
-                end: 80.0
-                step_size: 40.0
-        
-    -   name: module_3
-        type: Sample
-        output_module: module_4
-        instances: 1
+    - name: module_2
+      type: Sample
+      output_module: module_3
+      instances: 1
+      params:
+          - name: p
+            type: float
+            start: 0.0
+            end: 80.0
+            step_size: 20.0
+      to_exclude:
+          -   -   module: module_1
+                  param_name: p1
+                  param_value: val1
+              -   module: module_2
+                  param_name: p
+                  param_value: 20.0
+          -   -   module: module_1
+                  param_name: p1
+                  param_value: val2
+              -   module: module_2
+                  param_name: p
+                  param_value_except: 40.0
 
-    -   name: module_4
-        type: CSVWriter
-        output_file: results.csv 
-        instances: 1
+    - name: module_3
+      type: Sample
+      output_module: module_4
+      instances: 1
+
+    - name: module_4
+      type: CSVWriter
+      output_file: results.csv
+      instances: 1
+
+rules:
+    - to_exclude:
+          - module: module_1
+            param_name: p1
+            param_value: val1
+          - module: module_2
+            param_name: p
+            param_value: 20.0
+    - to_exclude:
+          - module: module_1
+            param_name: p1
+            param_value: val2
+          - module: module_2
+            param_name: p
+            param_value_except: 40.0
