@@ -9,3 +9,5 @@ pytest
 pyyaml
 rouge
 six
+boto3
+python_terraform

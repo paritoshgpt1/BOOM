@@ -27,6 +27,7 @@ def execute_cmd(cmd):
     return subprocess.Popen(cmd)
 
 
+# Directory containing all the zipped modules
 dirname = './tmp'
 filenames = dir_filter(dirname=dirname, extension='.zip')
 print(filenames)

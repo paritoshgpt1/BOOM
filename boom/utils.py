@@ -1,4 +1,4 @@
-'''The utilities functions shared within BOOM'''
+"""The utilities functions shared within BOOM"""
 
 import pika
 import glog as log
@@ -7,6 +7,7 @@ import gflags
 import subprocess
 
 FLAGS = gflags.FLAGS
+
 
 # The function to test if RabbitMQ is running
 #  @param rabbitmq_host The host of RabbitMQ server
@@ -29,11 +30,12 @@ def mongodb_status(mongodb_host):
     except pymongo.errors.ServerSelectionTimeoutError:
         return False
 
+
 # The function to execute a command in a subprocess
 #  @param cmd The command to be executed
 #  @return None if in debug mode, the subprocess instance otherwise
 def execute_cmd(cmd):
-    if FLAGS.debug == True:
+    if FLAGS.debug:
         log.info('Execute ' + ' '.join(cmd))
         return None
     else:

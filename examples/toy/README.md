@@ -46,7 +46,7 @@ The final module is a standard CSVWriter module that will write the final output
 ```
 
 pipeline:
-    mode: docker # Running mode, local or docker
+    mode: docker # Running mode, local or docker or aws
     name: toy_pipeline # Name of the pipeline
     rabbitmq_host: 127.0.0.1 # RabbitMQ's host's uri
     clean_up: false # Whether the pipeline cleans up after finished running, true or false

@@ -10,3 +10,6 @@ MANIFEST
 .idea/*
 env/*
 dist/*
+*.DS_Store
+.terraform
+**.tfstate*
