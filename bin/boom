@@ -60,6 +60,7 @@ def generate_module_code(conf, module, cur_id, exp_name):
 
     return code
 
+
 ## The function to start a boon/docker container and execute a command.
 #  @param client A connected cleint object.
 #  @param cmd The command the new container should run.
@@ -102,48 +103,82 @@ def start_container(client, cmd, name, volumes=None, network_mode='host'):
         return None
 
 
+## Function to Upload the Zipped modules and input data file to S3 Bucket
+#  Create an EC2 instance, download files from S3
+#  Run the modules on the EC2 instance
+#  Upload the results back to S3
+#  @param tf The terraform object to create the resources
+#  @param tf_variables The terraform variables for resource creation
+#  @param infra_dir The directory path for the infra folder containing the
+# terraform code to create the resources
 def upload_object(tf, tf_variables, infra_dir):
     log.info("Uploading Zipped modules to S3 Bucket")
+    # The script to generate terraform configuration to upload zipped
+    # modules to S3
     sh_file = infra_dir + '/upload_files/generate-upload-files-tf.sh'
+
+    # Execute the script
     subprocess.call([sh_file, curr_path, infra_dir, tf_variables['data_filename']])
     log.info("Zipped modules upload complete")
     log.info("Creating EC2 instance...")
+
+    # Creates the EC2 instance and required policies
     return_code, stdout, stderr = tf.apply(
         skip_plan=True,
         var=tf_variables
     )
     log.info("EC2 instance created")
-    # print(stdout)
-    # print(stderr)
 
 
-def wait_for_results(exp_name, output_file, bucket_name):
+## Wait for the results to be generated on the server
+#  This method keeps on polling the bucket to check for the result file
+#  specified by the user in the conf.yaml
+#  @param exp_name The name of this experiment
+#  @param output_file The name of results file
+#  @param exp_name The name of S3 bucket
+#  @param tf_variables The terraform variables to access S3 bucket objects
+def wait_for_results(exp_name, output_file, bucket_name, tf_variables):
     log.info("Waiting for results to be generated and uploaded to S3 bucket")
-    aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID']
-    aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
+    aws_access_key_id = tf_variables['AWS_ACCESS_KEY']
+    aws_secret_access_key = tf_variables['AWS_SECRET_KEY']
+
+    # Create connection with S3 bucket
     s3 = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
                         aws_secret_access_key=aws_secret_access_key)
     bucket = s3.Bucket(bucket_name)
+
+    # The complete result file path to look for
     result_file = exp_name + '/' + output_file
     count = 0
-    SLEEP_TIMER = 10
+    # The time after which we need to check for the results in the S3 bucket
+    sleep_timer = 10
+
     while True:
+        # Get the list of objects in S3 bucket
         for obj in bucket.objects.all():
             key = obj.key
+            # Check if it is the result file
             if key == result_file:
                 log.info("Results uploaded")
                 return True
-        time.sleep(SLEEP_TIMER)
-        count += SLEEP_TIMER
+        # Go to sleep for specified time
+        time.sleep(sleep_timer)
+        count += sleep_timer
         log.info("Time elapsed " + str(count) + "s")
 
 
+## Create an S3 bucket to store the results and intermediate files
+#  @param tf The terraform object to destroy the resources
 def destroy_resources(tf):
     log.info("Destroying all the resources...")
     tf.destroy()
     log.info("Resources Destroyed. Results uploaded to the bucket")
 
 
+## Create an S3 bucket to store the results and intermediate files
+#  @param infra_dir The directory path for the infra folder containing the
+#  terraform code to create an S3 bucket
+#  @param tf_variables The terraform variables for bucket creation
 def create_bucket(infra_dir, tf_variables):
     log.info("Creating the S3 Bucket...")
     tf = Terraform(working_dir=infra_dir + '/s3bucket', variables=tf_variables)
@@ -395,7 +430,7 @@ if __name__ == '__main__':
         # Wait for the results to be updated to S3
         bucket_name = conf['pipeline']['aws_config']['BUCKET_NAME']
         output_file = conf['modules'][-1]['output_file']
-        wait_for_results(exp_name, output_file, bucket_name)
+        wait_for_results(exp_name, output_file, bucket_name, tf_variables)
 
         # Destroy all the resources after the results have been uploaded to S3
         destroy_resources(tf)
