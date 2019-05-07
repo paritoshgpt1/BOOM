@@ -127,6 +127,10 @@ def upload_object(tf, tf_variables, infra_dir):
         skip_plan=True,
         var=tf_variables
     )
+    if return_code == 1:
+        log.info("upload_object stdout: " + stdout)
+        log.info("upload_object stderr: " + stderr)
+        exit()
     log.info("EC2 instance created")
 
 
@@ -183,9 +187,17 @@ def create_bucket(infra_dir, tf_variables):
     log.info("Creating the S3 Bucket...")
     tf = Terraform(working_dir=infra_dir + '/s3bucket', variables=tf_variables)
     return_code, stdout, stderr = tf.init(reconfigure=True)
+    if return_code == 1:
+        log.info("1 create_bucket stdout: " + stdout)
+        log.info("1 create_bucket stderr: " + stderr)
+        exit()
     return_code, stdout, stderr = tf.apply(
         skip_plan=True
     )
+    if return_code == 1:
+        log.info("2 create_bucket stdout: " + stdout)
+        log.info("2 create_bucket stderr: " + stderr)
+        exit()
     log.info("S3 Bucket created")
 
 
