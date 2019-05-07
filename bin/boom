@@ -16,7 +16,7 @@ from python_terraform import *
 logging.getLogger("pika").propagate = False
 
 
-# The function to save code to files, copy extra modules and zip the code
+## The function to save code to files, copy extra modules and zip the code
 #  @param code The code to save
 #  @param dir_name The directory to save the code
 def write_and_zip_code(code, dir_name):
