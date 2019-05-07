@@ -316,9 +316,7 @@ if __name__ == '__main__':
     Logger_conf = dict(module)
     Logger_conf['name'] = 'logger'
     Logger_conf['type'] = 'Logger'
-    #code = generate_module_code(conf, Logger_conf, cur_id)
     code = generate_module_code(conf, Logger_conf, cur_id, exp_name)
-    #dir_name = FLAGS.tmp_dir + '/logger'
     dir_name = FLAGS.tmp_dir + '/' + str(cur_id)
     dir_list.append(dir_name)
     write_and_zip_code(code, dir_name)
@@ -338,7 +336,6 @@ if __name__ == '__main__':
         if FLAGS.debug is False:
             for process in process_list:
                 process.wait()
-
 
         # Kill RabbitMQ process if needed.
         if rabbitmq != None:
